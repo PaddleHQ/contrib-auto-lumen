@@ -69,7 +69,7 @@ class HttpInstrumentation
                 }
                 $scope->detach();
                 $span = Span::fromContext($scope->context());
-                $span->updateName(self::getSpanName($request));
+                $span->updateName(self::getSpanName($app, $request));
                 if ($exception) {
                     $span->recordException($exception, [TraceAttributes::EXCEPTION_ESCAPED => true]);
                     $span->setStatus(StatusCode::STATUS_ERROR, $exception->getMessage());
@@ -104,11 +104,12 @@ class HttpInstrumentation
         );
     }
 
-    private static function getRouteName(LumenRequest $request): string {
-        $route = $request->route();
+    private static function getRouteName(Application $app, LumenRequest $request): string {
         if (is_array($route)) {
             if ($route[1]['as'] ?? false) {
                 // Try named routes
+                $routesByName = $app->router->namedRoutes;
+                return $routesByName[$route[1]['as']] ??  $route[1]['as'];
                 return $route[1]['as'];
             }
 

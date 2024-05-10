@@ -105,6 +105,7 @@ class HttpInstrumentation
     }
 
     private static function getRouteName(LumenRequest $request): string {
+        $route = $request->route();
         if (is_array($route)) {
             if ($route[1]['as'] ?? false) {
                 // Try named routes

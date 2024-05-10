@@ -105,12 +105,12 @@ class HttpInstrumentation
     }
 
     private static function getRouteName(Application $app, LumenRequest $request): string {
+        $route = $request->route();
         if (is_array($route)) {
             if ($route[1]['as'] ?? false) {
                 // Try named routes
                 $routesByName = $app->router->namedRoutes;
                 return $routesByName[$route[1]['as']] ??  $route[1]['as'];
-                return $route[1]['as'];
             }
 
             if ($route[1]['uses'] ?? false) {
@@ -121,6 +121,7 @@ class HttpInstrumentation
 
         return 'index.php';
     }
+
     private static function getSpanName(Application $app, LumenRequest $request): string
     {
         if (!$request) {

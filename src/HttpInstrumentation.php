@@ -62,7 +62,7 @@ class HttpInstrumentation
 
                 return [$request];
             },
-            post: static function (Application $app, array $params, ?Response $response, ?Throwable $exception) {
+            post: static function (Application $app, array $params, ?Response $response, ?Throwable $exception) use($request) {
                 $scope = Context::storage()->scope();
                 if (!$scope) {
                     return;

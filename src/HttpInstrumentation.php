@@ -121,13 +121,13 @@ class HttpInstrumentation
 
         return 'index.php';
     }
-    private static function getSpanName(LumenRequest $request): string
+    private static function getSpanName(Application $app, LumenRequest $request): string
     {
         if (!$request) {
             return 'unknown';
         }
 
-        return sprintf ('%s - %s', $request->getMethod(), self::getRouteName($request));
+        return sprintf ('%s - %s', $request->getMethod(), self::getRouteName($app, $request));
     }
 
     private static function httpTarget(SymfonyRequest $request): string

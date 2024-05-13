@@ -62,13 +62,14 @@ class HttpInstrumentation
 
                 return [$request];
             },
-            post: static function (Application $app, array $params, ?Response $response, ?Throwable $exception) {
+            post: static function (Application $app, array $params, ?Response $response, ?Throwable $exception) use($request) {
                 $scope = Context::storage()->scope();
                 if (!$scope) {
                     return;
                 }
                 $scope->detach();
                 $span = Span::fromContext($scope->context());
+                $span->updateName(self::getSpanName($app, $request));
                 if ($exception) {
                     $span->recordException($exception, [TraceAttributes::EXCEPTION_ESCAPED => true]);
                     $span->setStatus(StatusCode::STATUS_ERROR, $exception->getMessage());
@@ -101,6 +102,33 @@ class HttpInstrumentation
                 $span->end();
             }
         );
+    }
+
+    private static function getRouteName(Application $app, LumenRequest $request): string {
+        $route = $request->route();
+        if (is_array($route)) {
+            if ($route[1]['as'] ?? false) {
+                // Try named routes
+                $routesByName = $app->router->namedRoutes;
+                return $routesByName[$route[1]['as']] ??  $route[1]['as'];
+            }
+
+            if ($route[1]['uses'] ?? false) {
+                //Try the assigned controller action
+                return  $route[1]['uses'];
+            }
+        }
+
+        return 'index.php';
+    }
+
+    private static function getSpanName(Application $app, LumenRequest $request): string
+    {
+        if (!$request) {
+            return 'unknown';
+        }
+
+        return sprintf ('%s - %s', $request->getMethod(), self::getRouteName($app, $request));
     }
 
     private static function httpTarget(SymfonyRequest $request): string

@@ -6,15 +6,21 @@ namespace OpenTelemetry\Contrib\Instrumentation\Lumen\Watchers;
 
 use Laravel\Lumen\Application;
 use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Log\LogManager;
 use OpenTelemetry\API\Trace\Span;
 use OpenTelemetry\Context\Context;
 
 class LogWatcher extends Watcher
 {
+    /** @var LogManager */
+    private LogManager $logger;
+
     /** @psalm-suppress UndefinedInterfaceMethod */
     public function register(Application $app): void
     {
         $app['events']->listen(MessageLogged::class, [$this, 'recordLog']);
+
+        $this->logger = $app['log'];
     }
 
     /**
@@ -22,6 +28,10 @@ class LogWatcher extends Watcher
      */
     public function recordLog(MessageLogged $log): void
     {
+        if (!$this->logger->isHandling($log->level)) {
+            return;
+        }
+
         $attributes = [
             'level' => $log->level,
         ];
